@@ -15,15 +15,6 @@ app.use(morgan('dev'));
 // Routes
 app.use('/api/v1/student', studentRoutes);
 
-app.get('/test', async (req: Request, res: Response) => {
-  try {
-    const [rows] = await mySqlPool.query('SELECT 1');
-    res.status(200).send('<h1>Test Route Working</h1>');
-  } catch (error) {
-    console.error('Database query error:', error);
-    res.status(500).send('Database connection error');
-  }
-});
 
 const PORT = process.env.PORT || 8000;
 

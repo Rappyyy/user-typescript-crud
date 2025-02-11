@@ -80,6 +80,13 @@ const createStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
             });
             return;
         }
+        // if (req.body.name != String) {
+        //   res.status(400).send({
+        //     success:false,
+        //     message: "Name should not be an integer"
+        //   })
+        //   return;
+        // }
         const [result] = yield db_1.default.query('INSERT INTO students (name, roll_no, fees, medium) VALUES (?, ?, ?, ?)', [name, roll_no, fees, medium]);
         res.status(201).json({
             success: true,
