@@ -8,21 +8,19 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteStudent = exports.updateStudent = exports.createStudent = exports.getStudentById = exports.getStudents = void 0;
-const db_1 = __importDefault(require("../config/db"));
+const studentRepository_1 = require("./repository/implementation/studentRepository");
+const studentRepo = new studentRepository_1.StudentRepository();
 // Get all students
 const getStudents = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const [data] = yield db_1.default.query('SELECT * FROM students');
+        const students = yield studentRepo.getStudents();
         res.status(200).json({
             success: true,
             message: 'All student records',
-            totalStudents: data.length,
-            data,
+            totalStudents: students.length,
+            data: students,
         });
     }
     catch (error) {
@@ -30,7 +28,7 @@ const getStudents = (req, res) => __awaiter(void 0, void 0, void 0, function* ()
         res.status(500).json({
             success: false,
             message: 'Error in getting all student records',
-            error,
+            error
         });
     }
 });
@@ -40,32 +38,19 @@ const getStudentById = (req, res) => __awaiter(void 0, void 0, void 0, function*
     try {
         const studentId = req.params.id;
         if (!studentId) {
-            res.status(400).json({
-                success: false,
-                message: 'Invalid or missing student ID',
-            });
+            res.status(400).json({ success: false, message: 'Invalid or missing student ID' });
             return;
         }
-        const [data] = yield db_1.default.query('SELECT * FROM students WHERE id = ?', [studentId]);
-        if (data.length === 0) {
-            res.status(404).json({
-                success: false,
-                message: 'No records found',
-            });
+        const student = yield studentRepo.getStudentById(studentId);
+        if (!student) {
+            res.status(404).json({ success: false, message: 'No records found' });
             return;
         }
-        res.status(200).json({
-            success: true,
-            studentDetails: data[0],
-        });
+        res.status(200).json({ success: true, studentDetails: student });
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({
-            success: false,
-            message: 'Error in getting student by ID',
-            error,
-        });
+        res.status(500).json({ success: false, message: 'Error in getting student by ID', error });
     }
 });
 exports.getStudentById = getStudentById;
@@ -73,34 +58,25 @@ exports.getStudentById = getStudentById;
 const createStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { name, roll_no, fees, medium } = req.body;
+        // Ensure all required fields are provided
         if (!name || !roll_no || !fees || !medium) {
-            res.status(400).json({
-                success: false,
-                message: 'Please provide all required fields',
-            });
+            res.status(400).json({ success: false, message: "Please provide all required fields" });
             return;
         }
-        // if (req.body.name != String) {
-        //   res.status(400).send({
-        //     success:false,
-        //     message: "Name should not be an integer"
-        //   })
-        //   return;
-        // }
-        const [result] = yield db_1.default.query('INSERT INTO students (name, roll_no, fees, medium) VALUES (?, ?, ?, ?)', [name, roll_no, fees, medium]);
-        res.status(201).json({
-            success: true,
-            message: 'New student record created',
-            studentId: result.insertId,
-        });
+        // Manual regex validation to check if 'name' contains numbers
+        const nameRegex = /[0-9]/; // Matches any digit (0-9) in the name
+        if (nameRegex.test(req.body.name)) { // Use .test() to check for numbers
+            res.status(400).json({ success: false, message: "Invalid name: Name should not contain numbers" });
+            return;
+        }
+        console.log(nameRegex.test(req.body.name));
+        // Proceed with student creation if validation passes
+        const newStudent = yield studentRepo.create({ name, roll_no, fees, medium });
+        res.status(201).json({ success: true, message: "New student record created", student: newStudent });
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({
-            success: false,
-            message: 'Error in creating student',
-            error,
-        });
+        res.status(500).json({ success: false, message: "Error in creating student", error });
     }
 });
 exports.createStudent = createStudent;
@@ -110,32 +86,15 @@ const updateStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
         const studentId = req.params.id;
         const { name, roll_no, fees, medium } = req.body;
         if (!studentId) {
-            res.status(400).json({
-                success: false,
-                message: 'Invalid or missing student ID',
-            });
+            res.status(400).json({ success: false, message: 'Invalid or missing student ID' });
             return;
         }
-        const [result] = yield db_1.default.query('UPDATE students SET name = ?, roll_no = ?, fees = ?, medium = ? WHERE id = ?', [name, roll_no, fees, medium, studentId]);
-        if (result.affectedRows === 0) {
-            res.status(404).json({
-                success: false,
-                message: 'No student found to update',
-            });
-            return;
-        }
-        res.status(200).json({
-            success: true,
-            message: 'Student details updated successfully',
-        });
+        const updatedStudent = yield studentRepo.updateStudent(studentId, { name, roll_no, fees, medium });
+        res.status(200).json({ success: true, message: 'Student details updated successfully', student: updatedStudent });
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({
-            success: false,
-            message: 'Error in updating student details',
-            error,
-        });
+        res.status(500).json({ success: false, message: 'Error in updating student details', error });
     }
 });
 exports.updateStudent = updateStudent;
@@ -144,32 +103,15 @@ const deleteStudent = (req, res) => __awaiter(void 0, void 0, void 0, function* 
     try {
         const studentId = req.params.id;
         if (!studentId) {
-            res.status(400).json({
-                success: false,
-                message: 'Please provide a valid student ID',
-            });
+            res.status(400).json({ success: false, message: 'Please provide a valid student ID' });
             return;
         }
-        const [result] = yield db_1.default.query('DELETE FROM students WHERE id = ?', [studentId]);
-        if (result.affectedRows === 0) {
-            res.status(404).json({
-                success: false,
-                message: 'No student found to delete',
-            });
-            return;
-        }
-        res.status(200).json({
-            success: true,
-            message: 'Student deleted successfully',
-        });
+        const deletedStudent = yield studentRepo.delete(studentId);
+        res.status(200).json({ success: true, message: 'Student deleted successfully', student: deletedStudent });
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({
-            success: false,
-            message: 'Error in deleting student',
-            error,
-        });
+        res.status(500).json({ success: false, message: 'Error in deleting student', error });
     }
 });
 exports.deleteStudent = deleteStudent;

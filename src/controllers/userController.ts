@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
-import { StudentRepository } from '../controllers/repository/studentRepository';
+import { UserRepository } from './repository/implementation/userRepository';
 
-const studentRepo = new StudentRepository();
+const studentRepo = new UserRepository();
 
 // Get all students
 export const getStudents = async (req: Request, res: Response): Promise<void> => {
@@ -52,19 +52,31 @@ export const createStudent = async (req: Request, res: Response): Promise<void> 
   try {
     const { name, roll_no, fees, medium } = req.body;
 
+    // Ensure all required fields are provided
     if (!name || !roll_no || !fees || !medium) {
-      res.status(400).json({ success: false, message: 'Please provide all required fields' });
+      res.status(400).json({ success: false, message: "Please provide all required fields" });
       return;
     }
 
+    // Manual regex validation to check if 'name' contains numbers
+    const nameRegex = /[0-9]/; // Matches any digit (0-9) in the name
+    if (nameRegex.test(req.body.name)) { // Use .test() to check for numbers
+      res.status(400).json({ success: false, message: "Invalid name: Name should not contain numbers" });
+      return;
+    }
+
+    console.log(nameRegex.test(req.body.name))
+
+    // Proceed with student creation if validation passes
     const newStudent = await studentRepo.create({ name, roll_no, fees, medium });
 
-    res.status(201).json({ success: true, message: 'New student record created', student: newStudent });
+    res.status(201).json({ success: true, message: "New student record created", student: newStudent });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Error in creating student', error });
+    res.status(500).json({ success: false, message: "Error in creating student", error });
   }
 };
+
 
 // Update student
 export const updateStudent = async (req: Request, res: Response): Promise<void> => {

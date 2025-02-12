@@ -1,17 +1,18 @@
-import mySqlPool from "../../config/db";
-import { IStudent } from "../dto";
-import { IStudentRequest } from "../types";
-import { IStudentRepository } from "./IStudentRepository";
+import mySqlPool from "../../../config/db";
+import { IUser } from "../../dto";
+import { IUserRequest } from "../../types";
+import { IUserRepository } from "../IuserRepository";
 
 
-export class StudentRepository implements IStudentRepository {
-  async create(student: IStudentRequest): Promise<IStudent> {
+
+export class UserRepository implements IUserRepository {
+  async create(student: IUserRequest): Promise<IUser> {
     const [result]: any = await mySqlPool.query(
       'INSERT INTO students (name, roll_no, fees, medium) VALUES (?, ?, ?, ?)',
       [student.name, student.roll_no, student.fees, student.medium]
     );
 
-    const createdStudent: IStudent = {
+    const createdStudent: IUser = {
       id: result.insertId.toString(),
       ...student,
     };
@@ -19,7 +20,7 @@ export class StudentRepository implements IStudentRepository {
     return createdStudent;
   }
 
-  async getStudents(): Promise<IStudent[]> {
+  async getStudents(): Promise<IUser[]> {
     const [rows]: [any[], any] = await mySqlPool.query('SELECT * FROM students');
     return rows.map(row => ({
       id: row.id.toString(),
@@ -30,7 +31,7 @@ export class StudentRepository implements IStudentRepository {
     }));
   }
 
-  async getStudentById(studentId: string): Promise<IStudent | undefined> {
+  async getStudentById(studentId: string): Promise<IUser | undefined> {
     const [rows]: [any[], any] = await mySqlPool.query(
       'SELECT * FROM students WHERE id = ?',
       [studentId]
@@ -50,7 +51,7 @@ export class StudentRepository implements IStudentRepository {
     };
   }
 
-  async updateStudent(id: string, student: IStudentRequest): Promise<IStudent> {
+  async updateStudent(id: string, student: IUserRequest): Promise<IUser> {
     await mySqlPool.query(
       'UPDATE students SET name = ?, roll_no = ?, fees = ?, medium = ? WHERE id = ?',
       [student.name, student.roll_no, student.fees, student.medium, id]
@@ -62,7 +63,7 @@ export class StudentRepository implements IStudentRepository {
     };
   }
 
-  async delete(id: string): Promise<IStudent> {
+  async delete(id: string): Promise<IUser> {
     const student = await this.getStudentById(id);
     if (!student) {
       throw new Error('Student not found');

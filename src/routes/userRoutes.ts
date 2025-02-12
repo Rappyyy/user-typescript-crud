@@ -5,11 +5,13 @@ import {
   createStudent,
   updateStudent,
   deleteStudent,
-} from '../controllers/studentController';
+} from '../controllers/userController';
+
+import { validatorUser } from '../controllers/middleware/userControllerValidator';
 
 const router = express.Router();
 
-router.post('/create', createStudent);
+router.post('/create', validatorUser, createStudent);
 router.get('/getall', getStudents);
 router.get('/get/:id', getStudentById);
 router.put('/update/:id', updateStudent);

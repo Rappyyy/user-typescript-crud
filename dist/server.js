@@ -1,13 +1,4 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -24,16 +15,23 @@ app.use(express_1.default.json());
 app.use((0, morgan_1.default)('dev'));
 // Routes
 app.use('/api/v1/student', studentRoutes_1.default);
-app.get('/test', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// Global error handler
+app.use((err, req, res, next) => {
+    const statusCode = err.status || 500;
+    let errorMessage = err.message || 'Internal server error';
+    // If the error message is a JSON string (for validation errors), parse it
     try {
-        const [rows] = yield db_1.default.query('SELECT 1');
-        res.status(200).send('<h1>Test Route Working</h1>');
+        errorMessage = JSON.parse(errorMessage);
     }
-    catch (error) {
-        console.error('Database query error:', error);
-        res.status(500).send('Database connection error');
+    catch (_a) {
+        // If it’s not a JSON string, leave it as-is
     }
-}));
+    res.status(statusCode).json({
+        status: 'failed',
+        message: statusCode === 409 ? 'Validation error' : 'Internal server error',
+        errors: Array.isArray(errorMessage) ? errorMessage : [{ message: errorMessage }],
+    });
+});
 const PORT = process.env.PORT || 8000;
 db_1.default
     .query('SELECT 1')
