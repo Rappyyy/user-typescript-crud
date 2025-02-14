@@ -41,7 +41,11 @@ export const userSchema: AnyZodObject = z.object({
       invalid_type_error: "email must be a string",
     })
     .trim()
-    .min(1, "please provide a medium"),
+    .min(1, "please provide a medium")
+    .regex(
+      /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+      "Invalid email format"
+    ),
     password: z
     .string({
       required_error: "password is required.",

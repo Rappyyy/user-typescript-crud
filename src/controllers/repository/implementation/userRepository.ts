@@ -7,13 +7,18 @@ import { IUserRepository } from "../IuserRepository";
 
 export class UserRepository implements IUserRepository {
 
-  async isUsernameTaken(username: string): Promise<boolean> {
-    const [rows]: [any[], any] = await mySqlPool.query(
-      'SELECT id FROM users WHERE username = ? LIMIT 1',
-      [username]
-    );
-    return rows.length > 0;
-  }
+  /**
+ * Checks if a username is already taken in the database
+ */
+async isUsernameTaken(username: string): Promise<boolean> {
+  const [rows]: [any[], any] = await mySqlPool.query(
+    'SELECT id FROM users WHERE username = ? LIMIT 1',
+    [username]
+  );
+  return rows.length > 0;
+}
+
+
 
   async generateUsername(first_name: string, last_name: string): Promise<string> {
     // Extract all initials from first_name
@@ -36,6 +41,8 @@ export class UserRepository implements IUserRepository {
   
     return username;
   }
+
+
 
   async create(user: IUserRequest): Promise<IUser> {
     // Step 1: Generate the username based on first_name and last_name
@@ -64,7 +71,6 @@ export class UserRepository implements IUserRepository {
   
     return createdUser;
   }
-
   async getUsers(): Promise<IUser[]> {
     const [rows]: [any[], any] = await mySqlPool.query('SELECT * FROM users');
     return rows.map(row => ({
