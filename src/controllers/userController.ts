@@ -1,17 +1,17 @@
 import { Request, Response } from 'express';
 import { UserRepository } from './repository/implementation/userRepository';
 
-const studentRepo = new UserRepository();
+const userRepo = new UserRepository();
 
 // Get all students
-export const getStudents = async (req: Request, res: Response): Promise<void> => {
+export const getUsers = async (req: Request, res: Response): Promise<void> => {
   try {
-    const students = await studentRepo.getStudents();
+    const users = await userRepo.getUsers();
     res.status(200).json({
       success: true,
       message: 'All student records',
-      totalStudents: students.length,
-      data: students,
+      totalUsers: users.length,
+      data: users,
     });
   } catch (error) {
     console.error(error);
@@ -24,23 +24,23 @@ export const getStudents = async (req: Request, res: Response): Promise<void> =>
 };
 
 // Get student by ID
-export const getStudentById = async (req: Request, res: Response): Promise<void> => {
+export const getUserById = async (req: Request, res: Response): Promise<void> => {
   try {
-    const studentId = req.params.id;
+    const userId = req.params.id;
 
-    if (!studentId) {
-      res.status(400).json({ success: false, message: 'Invalid or missing student ID' });
+    if (!userId) {
+      res.status(400).json({ success: false, message: 'Invalid or missing user ID' });
       return;
     }
 
-    const student = await studentRepo.getStudentById(studentId);
+    const user = await userRepo.getUserById(userId);
 
-    if (!student) {
+    if (!user) {
       res.status(404).json({ success: false, message: 'No records found' });
       return;
     }
 
-    res.status(200).json({ success: true, studentDetails: student });
+    res.status(200).json({ success: true, studentDetails: user });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'Error in getting student by ID', error });
@@ -48,68 +48,59 @@ export const getStudentById = async (req: Request, res: Response): Promise<void>
 };
 
 // Create student
-export const createStudent = async (req: Request, res: Response): Promise<void> => {
+export const createUser = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, roll_no, fees, medium } = req.body;
+    const { first_name, middle_name, last_name, name_extension, email, password, username } = req.body;
 
     // Ensure all required fields are provided
-    if (!name || !roll_no || !fees || !medium) {
+    if (!first_name || !middle_name || !last_name || !name_extension || !email || !password) {
       res.status(400).json({ success: false, message: "Please provide all required fields" });
       return;
     }
 
-    // Manual regex validation to check if 'name' contains numbers
-    const nameRegex = /[0-9]/; // Matches any digit (0-9) in the name
-    if (nameRegex.test(req.body.name)) { // Use .test() to check for numbers
-      res.status(400).json({ success: false, message: "Invalid name: Name should not contain numbers" });
-      return;
-    }
+    // Proceed with user creation if validation passes
+    const newUser = await userRepo.create({ first_name, middle_name, last_name, name_extension, email, password, username });
 
-    console.log(nameRegex.test(req.body.name))
-
-    // Proceed with student creation if validation passes
-    const newStudent = await studentRepo.create({ name, roll_no, fees, medium });
-
-    res.status(201).json({ success: true, message: "New student record created", student: newStudent });
+    res.status(201).json({ success: true, message: "New user record created", user: newUser });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: "Error in creating student", error });
+    res.status(500).json({ success: false, message: "Error in creating user", error });
   }
 };
 
 
-// Update student
-export const updateStudent = async (req: Request, res: Response): Promise<void> => {
+// Update user
+export const updateUser = async (req: Request, res: Response): Promise<void> => {
   try {
-    const studentId = req.params.id;
-    const { name, roll_no, fees, medium } = req.body;
+    const userId = req.params.id;
+    const { first_name, middle_name, last_name, name_extension, email, password, username } = req.body;
 
-    if (!studentId) {
-      res.status(400).json({ success: false, message: 'Invalid or missing student ID' });
+    if (!userId) {
+      res.status(400).json({ success: false, message: 'Invalid or missing user ID' });
       return;
     }
 
-    const updatedStudent = await studentRepo.updateStudent(studentId, { name, roll_no, fees, medium });
+    const updatedUser = await userRepo.updateUser(userId, { first_name, middle_name, last_name, name_extension, email, password, username });
 
-    res.status(200).json({ success: true, message: 'Student details updated successfully', student: updatedStudent });
+    res.status(200).json({ success: true, message: 'User details updated successfully', user: updatedUser });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Error in updating student details', error});
+    res.status(500).json({ success: false, message: 'Error in updating user details', error});
   }
 };
 
-// Delete student
-export const deleteStudent = async (req: Request, res: Response): Promise<void> => {
+// Delete user
+export const deleteUser = async (req: Request, res: Response): Promise<void> => {
   try {
-    const studentId = req.params.id;
+    const userId = req.params.id;
 
-    if (!studentId) {
-      res.status(400).json({ success: false, message: 'Please provide a valid student ID' });
+    if (!userId) {
+      res.status(400).json({ success: false, message: 'Please provide a valid user ID' });
       return;
     }
 
-    const deletedStudent = await studentRepo.delete(studentId);
-    res.status(200).json({ success: true, message: 'Student deleted successfully', student: deletedStudent });
+    const deletedUser = await userRepo.delete(userId);
+    res.status(200).json({ success: true, message: 'Student deleted successfully', student: deletedUser });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, message: 'Error in deleting student', error});

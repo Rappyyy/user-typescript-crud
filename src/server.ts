@@ -1,7 +1,7 @@
 import express, { Application, Request, Response, NextFunction} from 'express';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
-import studentRoutes from './routes/userRoutes';
+import userRoutes from './routes/userRoutes';
 import mySqlPool from './config/db';
 
 dotenv.config();
@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 // Routes
-app.use('/api/v1/student', studentRoutes);
+app.use('/api/v1/user', userRoutes);
 
 
 // Global error handler

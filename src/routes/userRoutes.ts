@@ -1,20 +1,21 @@
 import express from 'express';
 import {
-  getStudents,
-  getStudentById,
-  createStudent,
-  updateStudent,
-  deleteStudent,
+  getUsers,
+  getUserById,
+  createUser,
+  updateUser,
+  deleteUser,
 } from '../controllers/userController';
 
 import { validatorUser } from '../controllers/middleware/userControllerValidator';
 
-const router = express.Router();
+const userRoutes = express.Router();
 
-router.post('/create', validatorUser, createStudent);
-router.get('/getall', getStudents);
-router.get('/get/:id', getStudentById);
-router.put('/update/:id', updateStudent);
-router.delete('/delete/:id', deleteStudent);
+userRoutes.post('/create', validatorUser, createUser);
+userRoutes.get('/getall', getUsers);
+userRoutes.get('/get/:id', getUserById);
 
-export default router;
+userRoutes.put('/update/:id', updateUser);
+userRoutes.delete('/delete/:id', deleteUser);
+
+export default userRoutes;
